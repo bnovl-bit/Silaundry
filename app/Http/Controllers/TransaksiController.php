@@ -15,6 +15,12 @@ class TransaksiController extends Controller
         return view('transaksi.index', compact('transaksi', 'layanan'));
     }
 
+    public function cetakStruk(Request $request)
+    {
+        $transaksi = Transaksi::with('layanan')->where('id_transaksi', $request->id_transaksi)->firstOrFail();
+        return view('transaksi.cetak', compact('transaksi'));
+    }
+
     public function create()
     {
         return redirect()->route('transaksi.index');
@@ -54,14 +60,15 @@ class TransaksiController extends Controller
         $transaksi = Transaksi::findOrFail($id);
         $transaksi->update($validated);
 
-        return redirect()->route('transaksi.index')->with('success', 'Transaksi berhasil diperbarui!');
+        return redirect()->route('transaksi.index');
     }
+
 
     public function destroy($id)
     {
         $transaksi = Transaksi::findOrFail($id);
         $transaksi->delete();
 
-        return redirect()->route('transaksi.index')->with('success', 'Transaksi berhasil dihapus!');
+        return redirect()->route('transaksi.index');
     }
 }

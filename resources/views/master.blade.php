@@ -60,6 +60,12 @@
                     <i class="fas fa-exchange-alt"></i>
                     <span>Transaksi</span></a>
             </li>
+            <hr class="sidebar-divider">
+            <li class="nav-item active">
+                <a class="nav-link" href="/laporan">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Laporan</span></a>
+            </li>
 
         </ul>
         <!-- End of Sidebar -->

@@ -4,7 +4,7 @@
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Layanan</h1>
         <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#exampleModalTambah">
-            <i class="fas fa-upload fa-sm text-white-50"></i>
+            <i class="fas fa-plus fa-sm text-white-50"></i>
             Tambah Layanan
         </button>
     </div>
@@ -19,7 +19,7 @@
                             <th>No</th>
                             <th>Nama Layanan</th>
                             <th>Deskripsi</th>
-                            <th>Harga</th>
+                            <th>Harga per-KG</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -33,6 +33,7 @@
                             <td>
                                 <button type="button"
                                     class="btn btn-warning btn-sm btn-ubah"
+                                    title="Ubah Layanan"
                                     data-id="{{ $item->id_layanan }}"
                                     data-nama="{{ $item->nama }}"
                                     data-deskripsi="{{ $item->deskripsi }}"
@@ -44,6 +45,7 @@
 
                                 <button type="button"
                                     class="btn btn-danger btn-sm btn-delete"
+                                    title="Hapus Layanan"
                                     data-id="{{ $item->id_layanan }}"
                                     data-nama="{{ $item->nama }}">
                                     <i class="fas fa-trash"></i>
@@ -141,25 +143,71 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    // tombol ubah → isi modal
+    // tombol ubah 
     $(document).on('click', '.btn-ubah', function() {
         let id = $(this).data('id');
         let nama = $(this).data('nama');
         let deskripsi = $(this).data('deskripsi');
         let harga = $(this).data('harga');
 
+        // Set nilai input form
         $('#ubah-nama').val(nama);
         $('#ubah-deskripsi').val(deskripsi);
         $('#ubah-harga').val(harga);
 
-        // Set action form
-        let actionUrl = "{{ url('layanan') }}/" + id;
+        let actionUrl = `/layanan/${id}`;
         $('#form-ubah').attr('action', actionUrl);
 
-        console.log("Form action diubah ke:", actionUrl); // ✅ Tambahkan ini
+        if ($('#form-ubah input[name="_method"]').length === 0) {
+            $('#form-ubah').append('<input type="hidden" name="_method" value="PUT">');
+        } else {
+            $('#form-ubah input[name="_method"]').val('PUT');
+        }
+
+        $('#modalUbah').modal('show');
     });
 
-    // tombol hapus → konfirmasi
+    // Submit Form Ubah Layanan via AJAX
+    $('#form-ubah').submit(function(e) {
+        e.preventDefault();
+        const form = $(this);
+        const url = form.attr('action');
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: form.serialize(),
+            success: function(response) {
+                if (response.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: response.message,
+                        showConfirmButton: true,
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK',
+                        allowOutsideClick: false
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $('#modalUbah').modal('hide');
+                            location.href = '/layanan';
+                        }
+                    });
+                }
+            },
+            error: function(xhr) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: 'Terjadi kesalahan saat menyimpan data.'
+                });
+                console.error(xhr.responseText);
+            }
+        });
+    });
+
+
+    // tombol hapus 
     $(document).on('click', '.btn-delete', function() {
         let id = $(this).data('id');
         let nama = $(this).data('nama');

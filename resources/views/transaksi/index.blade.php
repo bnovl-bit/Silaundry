@@ -5,7 +5,7 @@
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Transaksi</h1>
         <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#tambah-transaksi">
-            <i class="fas fa-upload fa-sm text-white-50"></i>
+            <i class="fas fa-plus fa-sm text-white-50"></i>
             Tambah Transaksi
         </button>
     </div>
@@ -37,24 +37,25 @@
                             <td>
                                 <button type="button"
                                     class="btn btn-warning btn-sm btn-ubah"
+                                    title="Ubah Transaksi"
                                     data-id="{{ $item->id_transaksi }}"
                                     data-tanggal="{{ $item->tanggal }}"
                                     data-layanan="{{ $item->id_layanan }}"
-                                    data-berat="{{ $item->berat}}"
-                                    data-nama_pelanggan="{{ $item->nama_pelanggan}}"
-                                    data-keterangan="{{ $item->keterangan}}"
+                                    data-berat="{{ $item->berat }}"
+                                    data-nama_pelanggan="{{ $item->nama_pelanggan }}"
+                                    data-keterangan="{{ $item->keterangan }}"
                                     data-toggle="modal"
                                     data-target="#ubah-transaksi">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button type="button"
                                     class="btn btn-info btn-sm btn-struk"
+                                    title="Cetak Transaksi"
                                     data-id="{{ $item->id_transaksi }}"
                                     data-tanggal="{{ $item->tanggal }}"
                                     data-layanan="{{ $item->layanan->nama ?? '-' }}"
                                     data-berat="{{ $item->berat }}"
                                     data-pelanggan="{{ $item->nama_pelanggan }}"
-                                    data-keterangan="{{ $item->keterangan }}"
                                     data-harga="{{ $item->layanan->harga ?? 0 }}"
                                     data-toggle="modal"
                                     data-target="#modal-struk">
@@ -62,6 +63,7 @@
                                 </button>
                                 <button
                                     class="btn btn-danger btn-sm btn-delete"
+                                    title="Hapus Transaksi"
                                     data-id="{{ $item->id_transaksi }}">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -183,136 +185,178 @@
     </div>
 </div>
 
-<!-- Modal Struk -->
-<div class="modal fade" id="modal-struk" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width:80mm;">
+<!-- Modal Cetak Struk -->
+<div class="modal fade" id="modal-struk" tabindex="-1" role="dialog" aria-labelledby="modalStrukLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Struk Transaksi</h5>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-            </div>
-            <div class="modal-body" id="printArea"></div>
-            <div class="modal-footer">
-                <button type="button" id="btn-print" class="btn btn-success btn-sm">
-                    <i class="fas fa-print"></i> Cetak
-                </button>
-                <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Tutup</button>
-            </div>
+            <form id="formCetakStruk" action="{{ route('transaksi.cetak') }}" method="GET" target="_blank">
+                <input type="hidden" name="id_transaksi" id="id_transaksi">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Struk Transaksi</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span>&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body" id="previewStruk" style="font-family: monospace; font-size: 12px;">
+                    <div class="text-center">
+                        <strong>SILAUNDRY</strong><br>
+                        Jl. Durian No.47, Pandean<br>
+                        Telp: 0895366226085
+                    </div>
+                    <hr>
+                    <p><strong>Tanggal:</strong> <span id="viewTanggal"></span></p>
+                    <p><strong>Pelanggan:</strong> <span id="viewNama"></span></p>
+                    <p><strong>Layanan:</strong> <span id="viewLayanan"></span></p>
+                    <p><strong>Berat:</strong> <span id="viewBerat"></span> Kg</p>
+                    <hr>
+                    <p><strong>Total:</strong> Rp <span id="viewTotal"></span></p>
+                    <hr>
+                    <div class="text-center">
+                        Terima kasih atas kepercayaan Anda!<br>
+                        Anda sopan kami Hammer.
+                    </div>
+                </div>
+
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Tutup</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Cetak</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-
-
 <!-- SweetAlert untuk hapus -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    $(document).on('click', '.btn-ubah', function() {
-        let id = $(this).data('id');
-        let tanggal = $(this).data('tanggal');
-        let layanan = $(this).data('layanan');
-        let berat = $(this).data('berat');
-        let nama = $(this).data('nama_pelanggan');
-        let keterangan = $(this).data('keterangan');
-        let harga = $(this).data('harga');
+    $(document).ready(function() {
 
-        $('#ubah-tanggal').val(tanggal);
-        $('#ubah-layanan').val(layanan);
-        $('#ubah-berat').val(berat);
-        $('#ubah-nama_pelanggan').val(nama);
-        $('#ubah-keterangan').val(keterangan);
+        // Tombol Ubah
+        $(document).on('click', '.btn-ubah', function() {
+            const id = $(this).data('id');
+            const tanggal = $(this).data('tanggal');
+            const layanan = $(this).data('layanan');
+            const berat = $(this).data('berat');
+            const nama = $(this).data('nama_pelanggan');
+            const keterangan = $(this).data('keterangan');
 
-        // Set action form untuk route update
-        let actionUrl = "{{ url('transaksi') }}/" + id;
-        $('#form-ubah').attr('action', actionUrl);
-    });
+            // Set value ke modal
+            $('#ubah-tanggal').val(tanggal);
+            $('#ubah-layanan').val(layanan);
+            $('#ubah-berat').val(berat);
+            $('#ubah-nama_pelanggan').val(nama);
+            $('#ubah-keterangan').val(keterangan);
 
+            // Set action form
+            const actionUrl = "{{ url('transaksi') }}/" + id;
+            $('#form-ubah').attr('action', actionUrl);
 
-    $(document).on('click', '.btn-delete', function() {
-        let id = $(this).data('id');
-        let nama = $(this).data('nama');
-
-        Swal.fire({
-            title: 'Yakin?',
-            text: "Data " + nama + " akan dihapus!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Ya, hapus!',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: "/transaksi/" + id,
-                    type: "POST",
-                    data: {
-                        "_method": "DELETE",
-                        "_token": "{{ csrf_token() }}"
-                    },
-                    success: function(response) {
-                        Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success')
-                            .then(() => location.reload());
-                    },
-                    error: function(xhr, status, error) {
-                        console.error(xhr.responseText);
-                        Swal.fire('Error!', 'Gagal menghapus data.', 'error');
-                    }
-                });
+            // Pastikan ada _method PUT
+            if ($('#form-ubah input[name="_method"]').length === 0) {
+                $('#form-ubah').append('<input type="hidden" name="_method" value="PUT">');
             }
         });
-    });
 
-    // struk
-    $(document).on('click', '.btn-struk', function() {
-        let tanggal = $(this).data('tanggal');
-        let pelanggan = $(this).data('pelanggan');
-        let layanan = $(this).data('layanan');
-        let berat = $(this).data('berat');
-        let keterangan = $(this).data('keterangan');
-        let harga = $(this).data('harga');
+        // Submit Form Ubah via AJAX
+        $('#form-ubah').submit(function(e) {
+            e.preventDefault();
+            const form = $(this);
+            const url = form.attr('action');
 
-        let total = berat * harga;
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: 'Data transaksi berhasil diperbarui.',
+                        showConfirmButton: true,
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK',
+                        allowOutsideClick: false
+                    }).then((result) => {
+                        if ($.fn.DataTable.isDataTable('#tabel-transaksi')) {
+                            $('#tabel-transaksi').DataTable().ajax.reload(null, false); 
+                        } else {
+                            location.href = '/transaksi'; 
+                        }
+                    });
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: 'Terjadi kesalahan saat menyimpan data.'
+                    });
+                    console.error(xhr.responseText);
+                }
+            });
+        });
 
-        let html = `
-    <div style="text-align:center; font-size:12px;">
-        <strong>SILAUNDRY</strong><br>
-        Jl. Durian No. 47, Pandean<br>
-        Telp: 0895366226085
-        <hr style="border:1px dotted #000;">
-    </div>
-    <p><strong>Tanggal:</strong> ${tanggal}</p>
-    <p><strong>Pelanggan:</strong> ${pelanggan}</p>
-    <p><strong>Layanan:</strong> ${layanan}</p>
-    <p><strong>Berat:</strong> ${berat} Kg</p>
-    <p><strong>Keterangan:</strong> ${keterangan}</p>
-    <hr style="border:1px dotted #000;">
-    <table style="width:100%; font-size:12px;">
-        <tr><td>Total</td><td style="text-align:right;">Rp ${total.toLocaleString()}</td></tr>
-        <tr><td>Tunai</td><td style="text-align:right;">Rp ${total.toLocaleString()}</td></tr>
-        <tr><td>Kembali</td><td style="text-align:right;">Rp 0</td></tr>
-    </table>
-    <hr style="border:1px dotted #000;">
-    <div style="text-align:center; font-size:11px;">
-        Terima kasih atas kepercayaan Anda!<br>
-        Anda sopan kami Hammer.
-    </div>`;
+        // Tombol Hapus
+        $(document).on('click', '.btn-delete', function() {
+            const id = $(this).data('id');
+            const nama = $(this).data('nama') || 'Transaksi ini';
 
-        $('#printArea').html(html);
-        $('#modal-struk').modal('show');
-    });
-    $(document).on('click', '#btn-print', function() {
-        let printContents = document.getElementById('printArea').innerHTML;
-        let printWindow = window.open('', '', 'width=400,height=800');
-        printWindow.document.write('<html><head><title>Cetak Struk</title>');
-        printWindow.document.write('<style>body{font-family:monospace; font-size:12px;}</style>');
-        printWindow.document.write('</head><body>');
-        printWindow.document.write(printContents);
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        printWindow.print();
+            Swal.fire({
+                title: 'Yakin?',
+                text: "Data " + nama + " akan dihapus!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "/transaksi/" + id,
+                        type: "POST",
+                        data: {
+                            "_method": "DELETE",
+                            "_token": "{{ csrf_token() }}"
+                        },
+                        success: function(response) {
+                            Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success')
+                                .then(() => location.reload());
+                        },
+                        error: function(xhr) {
+                            console.error(xhr.responseText);
+                            Swal.fire('Error!', 'Gagal menghapus data.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+
+        // Tombol Struk
+        $(document).on('click', '.btn-struk', function() {
+            const id = $(this).data('id');
+            const tanggal = $(this).data('tanggal');
+            const layanan = $(this).data('layanan');
+            const berat = $(this).data('berat');
+            const nama = $(this).data('pelanggan');
+            const harga = $(this).data('harga') || 0;
+            const total = berat * harga;
+
+            // Set value modal struk
+            $('#id_transaksi').val(id);
+            $('#viewTanggal').text(tanggal);
+            $('#viewNama').text(nama);
+            $('#viewLayanan').text(layanan);
+            $('#viewBerat').text(berat);
+            $('#viewTotal').text(total.toLocaleString('id-ID'));
+        });
+
     });
 </script>
+
 @endsection

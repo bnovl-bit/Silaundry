@@ -3,6 +3,7 @@
 use App\Http\Controllers\BerandaController;
 use App\Http\Controllers\LayananController;
 use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\LaporanController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -23,4 +24,11 @@ Route::get('/transaksi', [TransaksiController::class, 'index'])->name('transaksi
 Route::post('/transaksi/store', [TransaksiController::class, 'store'])->name('transaksi.store');
 Route::put('/transaksi/{id}', [TransaksiController::class, 'update'])->name('transaksi.update');
 Route::delete('/transaksi/{id}', action: [TransaksiController::class, 'destroy'])->name('transaksi.destroy');
+Route::get('/transaksi/cetak', [TransaksiController::class, 'cetakStruk'])->name('transaksi.cetak');
+
+// Ini Routing halaman laporan
+Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+Route::get('/laporan/cetak', [LaporanController::class, 'cetakPDF'])->name('laporan.cetak');
+
+
 
